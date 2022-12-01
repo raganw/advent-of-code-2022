@@ -7,11 +7,11 @@ fn parse_input(input: &str) -> Vec<u32> {
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    parse_input(&input).into_iter().max()
+    parse_input(input).into_iter().max()
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let mut elf_calories: Vec<u32> = parse_input(&input);
+    let mut elf_calories: Vec<u32> = parse_input(input);
     elf_calories.sort();
     elf_calories.reverse();
     let top_3_sum: u32 = elf_calories.into_iter().take(3).sum();
