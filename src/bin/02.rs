@@ -107,9 +107,7 @@ impl Match {
             let move_score = MOVE_SCORES.get(&my_move).unwrap();
             let result = self.state().unwrap();
             let state_score = STATE_SCORES.get(&result).unwrap();
-            let total_score = *move_score + *state_score;
-
-            total_score
+            *move_score + *state_score
         })
     }
 }
@@ -127,9 +125,7 @@ fn parse_match_2(input: &str) -> Match {
         'Y' => &Draw,
         _ => &Win
     };
-    let the_match = Match::new(None, *their_move).update_to_state(*desired_state);
-
-    the_match
+    Match::new(None, *their_move).update_to_state(*desired_state)
 }
 
 fn match_state((a, b): (&Move, &Move)) -> State {
@@ -165,8 +161,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 
 pub fn part_two(input: &str) -> Option<u32> {
     let items: u32 = input.lines().map(parse_match_2).map(|m| {
-        let score = m.get_score().unwrap_or(0);
-        score
+        m.get_score().unwrap_or(0)
     }).sum();
     dbg!(items);
 
