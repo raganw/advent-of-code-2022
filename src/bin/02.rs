@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate lazy_static;
 
-use std::collections::{HashMap, HashSet};
 use itertools::Itertools;
+use std::collections::{HashMap, HashSet};
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Copy)]
 enum Move {
@@ -16,7 +16,7 @@ use Move::*;
 enum State {
     Win,
     Loss,
-    Draw
+    Draw,
 }
 use State::*;
 
@@ -34,7 +34,6 @@ lazy_static! {
         m.insert(Scissors, 3);
         m
     };
-
     static ref STATE_SCORES: HashMap<State, u32> = {
         let mut m = HashMap::new();
         m.insert(Loss, 0);
@@ -42,7 +41,6 @@ lazy_static! {
         m.insert(Draw, 3);
         m
     };
-
     static ref CODE_TO_MOVE: HashMap<char, Move> = {
         let mut m = HashMap::new();
         m.insert('A', Rock);
@@ -53,7 +51,6 @@ lazy_static! {
         m.insert('Z', Scissors);
         m
     };
-
     static ref WINS: HashSet<(Move, Move)> = {
         let mut m = HashSet::new();
         m.insert((Scissors, Rock));
@@ -85,7 +82,7 @@ impl Match {
 
     pub fn update_to_state(&mut self, desired_state: State) -> Self {
         self.my_move = if desired_state == Draw {
-             Some(self.their_move)
+            Some(self.their_move)
         } else if desired_state == Win {
             match self.their_move {
                 Rock => Some(Paper),
@@ -102,7 +99,6 @@ impl Match {
         *self
     }
     pub fn get_score(&self) -> Option<u32> {
-
         self.my_move.map(|my_move| {
             let move_score = MOVE_SCORES.get(&my_move).unwrap();
             let result = self.state().unwrap();
@@ -112,18 +108,26 @@ impl Match {
     }
 }
 
-
 fn parse_match(input: &str) -> (&Move, &Move) {
-    input.chars().filter_map(|c| CODE_TO_MOVE.get(&c)).collect_tuple().unwrap()
+    input
+        .chars()
+        .filter_map(|c| CODE_TO_MOVE.get(&c))
+        .collect_tuple()
+        .unwrap()
 }
 
 fn parse_match_2(input: &str) -> Match {
-    let (move_char, state_char): (char, char) = input.chars().filter(|c| *c != ' ').take(2).collect_tuple().unwrap();
+    let (move_char, state_char): (char, char) = input
+        .chars()
+        .filter(|c| *c != ' ')
+        .take(2)
+        .collect_tuple()
+        .unwrap();
     let their_move: &Move = CODE_TO_MOVE.get(&move_char).unwrap();
     let desired_state: &State = match state_char {
         'X' => &Loss,
         'Y' => &Draw,
-        _ => &Win
+        _ => &Win,
     };
     Match::new(None, *their_move).update_to_state(*desired_state)
 }
@@ -143,26 +147,35 @@ fn calculate_match_score((a, b): (&Move, &Move)) -> u32 {
     let result = match_state((a, b));
     let state_score = STATE_SCORES.get(&result).unwrap();
     let total_score = *move_score + *state_score;
-    dbg!(a, b, result, move_score, state_score, total_score, "-------");
+    dbg!(
+        a,
+        b,
+        result,
+        move_score,
+        state_score,
+        total_score,
+        "-------"
+    );
 
     total_score
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let rps_matches: Vec<(&Move, &Move)> = input.lines().map(|rps| {
-        parse_match(rps)
-    }).collect();
+    let rps_matches: Vec<(&Move, &Move)> = input.lines().map(|rps| parse_match(rps)).collect();
     dbg!(&rps_matches);
-    let points: u32 = rps_matches.iter().map(|(a, b)| {
-        calculate_match_score((a, b))
-    }).sum();
+    let points: u32 = rps_matches
+        .iter()
+        .map(|(a, b)| calculate_match_score((a, b)))
+        .sum();
     Some(points)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let items: u32 = input.lines().map(parse_match_2).map(|m| {
-        m.get_score().unwrap_or(0)
-    }).sum();
+    let items: u32 = input
+        .lines()
+        .map(parse_match_2)
+        .map(|m| m.get_score().unwrap_or(0))
+        .sum();
     dbg!(items);
 
     Some(items)

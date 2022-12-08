@@ -1,9 +1,16 @@
 fn parse_input(input: &str) -> Vec<u32> {
     let elf_inventories: Vec<&str> = input.split("\n\n").collect();
     dbg!(&elf_inventories.len());
-    elf_inventories.into_iter().map(|inv_str| {
-        inv_str.trim().lines().map(|cal_str| cal_str.parse::<u32>().unwrap_or(0)).sum::<u32>()
-    }).collect()
+    elf_inventories
+        .into_iter()
+        .map(|inv_str| {
+            inv_str
+                .trim()
+                .lines()
+                .map(|cal_str| cal_str.parse::<u32>().unwrap_or(0))
+                .sum::<u32>()
+        })
+        .collect()
 }
 
 pub fn part_one(input: &str) -> Option<u32> {

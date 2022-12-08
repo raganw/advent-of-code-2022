@@ -6,15 +6,29 @@ use itertools::Itertools;
 struct Move {
     quantity: u32,
     start: usize,
-    end: usize
+    end: usize,
 }
 
 fn parse_start_state(input: &str) -> Vec<VecDeque<char>> {
     let lines: Vec<&str> = input.lines().collect();
 
-    let (number_line_idx, num_columns) = lines.iter().enumerate().find(|(_, l)| l.contains('1')).map(|(idx, line)| {
-        (idx, line.trim().chars().last().unwrap().to_string().parse::<u32>().unwrap())
-    }).unwrap();
+    let (number_line_idx, num_columns) = lines
+        .iter()
+        .enumerate()
+        .find(|(_, l)| l.contains('1'))
+        .map(|(idx, line)| {
+            (
+                idx,
+                line.trim()
+                    .chars()
+                    .last()
+                    .unwrap()
+                    .to_string()
+                    .parse::<u32>()
+                    .unwrap(),
+            )
+        })
+        .unwrap();
 
     let mut stacks: Vec<VecDeque<char>> = Vec::new();
     for _ in 0..num_columns {
@@ -36,18 +50,32 @@ fn parse_start_state(input: &str) -> Vec<VecDeque<char>> {
 }
 
 fn parse_instructions(input: &str) -> Vec<Move> {
-    input.lines().map(|l| {
-        let (quantity, start, end) = l.split(' ').filter_map(|sub| sub.parse::<u32>().ok()).collect_tuple().unwrap();
-        Move { quantity, start: start as usize - 1, end: end as usize - 1 }
-    }).collect::<Vec<Move>>()
-
+    input
+        .lines()
+        .map(|l| {
+            let (quantity, start, end) = l
+                .split(' ')
+                .filter_map(|sub| sub.parse::<u32>().ok())
+                .collect_tuple()
+                .unwrap();
+            Move {
+                quantity,
+                start: start as usize - 1,
+                end: end as usize - 1,
+            }
+        })
+        .collect::<Vec<Move>>()
 }
 fn make_move(operation: Move, stacks: &mut Vec<VecDeque<char>>) {
     dbg!(&operation, &stacks);
     for _ in 0..operation.quantity {
         let c: char;
         {
-            c = stacks.get_mut(operation.start).unwrap().pop_front().unwrap();
+            c = stacks
+                .get_mut(operation.start)
+                .unwrap()
+                .pop_front()
+                .unwrap();
         }
         stacks.get_mut(operation.end).unwrap().push_front(c);
     }
@@ -57,7 +85,11 @@ fn make_move_9001(operation: Move, stacks: &mut Vec<VecDeque<char>>) {
     dbg!(&operation, &stacks);
     let mut stack: VecDeque<char> = VecDeque::new();
     for _ in 0..operation.quantity {
-        let c = stacks.get_mut(operation.start).unwrap().pop_front().unwrap();
+        let c = stacks
+            .get_mut(operation.start)
+            .unwrap()
+            .pop_front()
+            .unwrap();
         stack.push_front(c);
     }
     for c in stack {
