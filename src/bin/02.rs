@@ -161,7 +161,7 @@ fn calculate_match_score((a, b): (&Move, &Move)) -> u32 {
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let rps_matches: Vec<(&Move, &Move)> = input.lines().map(|rps| parse_match(rps)).collect();
+    let rps_matches: Vec<(&Move, &Move)> = input.lines().map(parse_match).collect();
     dbg!(&rps_matches);
     let points: u32 = rps_matches
         .iter()

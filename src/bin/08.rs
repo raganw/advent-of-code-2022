@@ -115,8 +115,6 @@ pub fn part_two(input: &str) -> Option<u32> {
                     Tree { height, ..Tree::default() }
                 }).collect()
         }).collect();
-    let grid_width = grid.get(0).unwrap().len();
-    let grid_height = grid.len();
 
     for (row_idx, row) in grid.iter_mut().enumerate() {
         for (col_idx, mut tree) in row.iter_mut().enumerate() {
