@@ -1,45 +1,39 @@
-use std::{collections::HashMap};
+use std::borrow::Borrow;
+use std::collections::HashMap;
+use std::cell::RefCell;
+use std::rc::Rc;
 
-use nom::{
-    branch::alt,
-    bytes::complete::{is_a, tag},
-    character::complete::{alpha1, newline},
-    multi::{separated_list0, separated_list1},
-    sequence::{preceded, separated_pair},
-    IResult,
-};
+use advent_of_code::fs_parse::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Dir<'a> {
     name: &'a str,
-    files: Vec<File<'a>>,
-    dirs: HashMap<&'a str, Dir<'a>>,
+    files: RefCell<Vec<Rc<File<'a>>>>,
+    dirs: RefCell<HashMap<&'a str, Rc<Dir<'a>>>>,
 }
 
 impl <'a> Dir<'a> {
     fn new(name: &'a str) -> Self {
         Self {
             name,
-            files: Vec::<File<'a>>::new(),
-            dirs: HashMap::new(),
+            files: RefCell::new(Vec::<Rc<File<'a>>>::new()),
+            dirs: RefCell::new(HashMap::new()),
         }
     }
 
     fn size(&self) -> u32 {
-        let total_files = self.files.iter().map(|f| f.filesize).sum::<u32>();
-        let total_dirs = self.dirs.iter().map(|(_, d)| d.size()).sum::<u32>();
+        let total_files = self.files.borrow().iter().map(|f| f.filesize).sum::<u32>();
+        let total_dirs = self.dirs.borrow().iter().map(|(_, d)| d.size()).sum::<u32>();
         total_files + total_dirs
     }
-    
-    fn set_content(&mut self, files: Vec::<File<'a>>, dirs: HashMap<&str, Dir<'a>>) {
-        for file in files {
-            self.files.push(File::new(file.name, file.filesize));
-        }
-        for (name, dir) in dirs {
-            self.dirs.insert(dir.name, Dir::new(dir.name));
-        }
+
+    fn sizes(&self) -> Vec<u32> {
+        let mut child_sizes: Vec<u32> = self.dirs.borrow().iter().flat_map(|(_, d)| d.sizes()).collect();
+        child_sizes.push(self.size());
+        child_sizes
     }
 }
+    
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct File<'a> {
@@ -56,124 +50,70 @@ impl <'a> File <'a> {
     }
 }
 
-#[derive(Debug)]
-enum Operation<'a> {
-    Cd(Cd<'a>),
-    Ls(Vec<LsEntry<'a>>),
-}
-
-#[derive(Debug)]
-enum Cd<'a> {
-    Up,
-    Down(&'a str),
-    Root,
-}
-
-#[derive(Debug)]
-enum LsEntry<'a> {
-    File { name: &'a str, size: u32 },
-    Dir(&'a str),
-}
-
-fn dir(input: &str) -> IResult<&str, LsEntry> {
-    let (input, dir_name) = preceded(tag("dir "), alpha1)(input)?;
-    Ok((input, LsEntry::Dir(dir_name)))
-}
-
-fn filename(input: &str) -> IResult<&str, &str> {
-    is_a("qwertyuiopasdfghjklzxcvbnm.")(input)
-}
-
-fn file(input: &str) -> IResult<&str, LsEntry> {
-    let (input, (size, name)) =
-        separated_pair(nom::character::complete::u32, tag(" "), filename)(input)?;
-
-    Ok((input, LsEntry::File { name, size }))
-}
-
-fn ls(input: &str) -> IResult<&str, Operation> {
-    let (input, _) = tag("$ ls")(input)?;
-    let (input, _) = newline(input)?;
-    let (input, ls_entries) = separated_list1(newline, alt((dir, file)))(input)?;
-    dbg!(&ls_entries);
-
-    Ok((input, Operation::Ls(ls_entries)))
-}
-
-fn cd(input: &str) -> IResult<&str, Operation> {
-    let (input, _) = tag("$ cd ")(input)?;
-    let (input, cd) = alt((tag(".."), tag("/"), alpha1))(input)?;
-    let op = match cd {
-        ".." => Operation::Cd(Cd::Up),
-        "/" => Operation::Cd(Cd::Root),
-        dir => Operation::Cd(Cd::Down(dir)),
-    };
-    Ok((input, op))
-}
-
-fn parse_operations(input: &str) -> IResult<&str, Vec<Operation>> {
-    let (input, operations) = separated_list1(newline, alt((ls, cd)))(input)?;
-    Ok((input, operations))
-}
-
-pub fn part_one(input: &str) -> Option<u32> {
-    let lines: Vec<&str> = input.lines().collect();
-    dbg!(&lines);
-    let operations = parse_operations(input).unwrap().1;
-    let mut fs_nodes: HashMap<String, Vec<LsEntry>> = HashMap::new();
-    let mut cwd: Vec<&str> = vec![];
-
-    let root = Dir::new("/");
-    let mut dir_stack: Vec<&Dir> = vec![];
-    dir_stack.push(&root);
+fn build_filesystem(operations: Vec<Operation>) -> Rc<Dir> {
+    let root = Rc::new(Dir::new("/"));
+    let mut dir_stack: Vec<Rc<Dir>> = vec![];
 
     for op in operations {
-        // let current_dir: &Dir<'_> = dir_stack.last().unwrap();
-        dbg!(&op);
         match op {
             Operation::Cd(cd_op) => {
                 match cd_op {
                     Cd::Root => {
-                        cwd.push("/");
+                        dir_stack.push(root.clone());
                     },
                     Cd::Down(dirname) => {
-                        cwd.push(dirname);
-                        // let new_dir = current_dir.dirs.get(dirname).unwrap();
-                        // dir_stack.push(new_dir);
+                        let current_dir = dir_stack.last().unwrap();
+                        let new_cwd = current_dir.dirs.borrow().get(dirname).unwrap().clone();
+                        dir_stack.push(new_cwd);
                     },
                     Cd::Up => {
-                        cwd.pop();
-                        // dir_stack.pop();
+                        dir_stack.pop();
                     }
                 }
             },
             Operation::Ls(ls_entries) => {
-                let cwd = cwd.join("/");
-                let mut files: Vec<File> = vec![];
-                let mut dirs: HashMap<&str, Dir> = HashMap::new();
+                let current_dir = dir_stack.last().unwrap();
                 for entry in ls_entries.iter() {
                     match entry {
                         LsEntry::Dir(dirname) => {
-                            dirs.insert(dirname, Dir::new(dirname));
+                            current_dir.dirs.borrow_mut().insert(dirname, Rc::new(Dir::new(dirname)));
                         }
                         LsEntry::File { name, size } => {
-                            files.push(File::new(name, *size));
+                            current_dir.files.borrow_mut().push(Rc::new(File::new(name, *size)));
                         }
                     }
                 }
-                // current_dir.set_content(files, dirs);
-                fs_nodes.insert(cwd, ls_entries);
             }
         }
     }
 
-    dbg!(fs_nodes);
+    root
+}
 
-    None
+pub fn part_one(input: &str) -> Option<u32> {
+    let operations = parse_operations(input).unwrap().1;
+    let root = build_filesystem(operations);
+
+    let result: u32 = root.sizes().into_iter().filter(|&v| v < 100_000).sum();
+
+    Some(result)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let operations = parse_operations(input).unwrap().1;
+    let root = build_filesystem(operations);
+    let total_disk_space = 70_000_000;
+    let space_needed = 30_000_000;
+    let total_used_space = root.size();
+    let unused_space = total_disk_space - total_used_space;
+    let space_to_free = space_needed - unused_space;
+    dbg!(total_used_space, unused_space, space_to_free);
+    let sizes = root.sizes();
+    let candidates: Vec<&u32> = sizes.iter().filter(|&&s| s > space_to_free).collect();
+    dbg!(&candidates);
+    let result = candidates.iter().min().unwrap();
+
+    Some(**result)
 }
 
 fn main() {
@@ -195,6 +135,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 7);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(24933642));
     }
 }
