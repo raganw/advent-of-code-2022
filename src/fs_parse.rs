@@ -65,5 +65,3 @@ pub fn parse_operations(input: &str) -> IResult<&str, Vec<Operation>> {
     let (input, operations) = separated_list1(newline, alt((ls, cd)))(input)?;
     Ok((input, operations))
 }
-
-
