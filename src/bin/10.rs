@@ -144,10 +144,17 @@ fn parse_input(input: &str) -> IResult<&str, Vec<Operation>> {
 pub fn part_one(input: &str) -> Option<i32> {
     let (_, operations) = parse_input(input).finish().unwrap();
     let computer = Computer::new(operations);
-    let output: Vec<(usize, i32)> = computer.enumerate().collect();
-    let samples = vec![output[20], output[60], output[100], output[140], output[180], output[220]];
-    let result: i32 = samples.iter().map(|(a, b)| *a as i32 * b).sum();
-    Some(result)
+    let interesting_cycles = vec![20, 60, 100, 140, 180, 220];
+    let output: i32 = computer.enumerate().filter_map(|(i, register)| {
+        if interesting_cycles.contains(&(i as i32)) {
+            Some(i as i32 * register)
+        } else {
+            None
+        }
+    }).sum();
+    // let samples = vec![output[20], output[60], output[100], output[140], output[180], output[220]];
+    // let result: i32 = samples.iter().map(|(a, b)| *a as i32 * b).sum();
+    Some(output)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
