@@ -1,7 +1,5 @@
 use std::collections::VecDeque;
 
-use itertools::Itertools;
-
 #[derive(Clone, Copy, Debug)]
 struct Tile {
     height: char,
@@ -22,7 +20,6 @@ impl Tile {
 #[derive(Debug)]
 struct Map {
     tiles: Vec<Tile>,
-    height: usize,
     width: usize,
     start: usize,
     end: usize,
@@ -30,7 +27,6 @@ struct Map {
 
 impl Map {
     fn new(input: &str) -> Self {
-        let height = input.lines().count();
         let width = input.lines().last().map(|l| l.chars().count()).unwrap();
         let tiles = input.lines().flat_map(|l| l.chars().collect::<Vec<char>>()).collect::<Vec<char>>();
         let start = tiles.iter().position(|&c| c == 'S').unwrap();
@@ -49,7 +45,6 @@ impl Map {
 
         Self {
             tiles,
-            height,
             width,
             start,
             end,
@@ -164,7 +159,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     let result = starting_points.iter().filter_map(|&start| {
         let mut map = Map::new(input);
         let path = map.find_path(start, map.end);
-        if path.len() == 0 {
+        if path.is_empty() {
             None
         } else {
             Some(path.len() as u32 - 1)
