@@ -1,9 +1,9 @@
-use std::{collections::{BTreeMap, BTreeSet, HashSet}, ops::RangeInclusive};
+use std::{collections::{BTreeMap, BTreeSet, HashSet}, ops::{RangeInclusive, ControlFlow}};
 
 // Sensor at x=2, y=18: closest beacon is at x=-2, y=15
 use advent_of_code::point::Point;
 
-use nom::{IResult, multi::separated_list1, character::complete::{i32 as nom_i32, newline}, sequence::{delimited, preceded, separated_pair}, bytes::complete::tag};
+use nom::{IResult, multi::separated_list1, character::complete::{i32 as nom_i32, newline}, sequence::{preceded, separated_pair}, bytes::complete::tag};
 
 type Sensor = Point;
 type Beacon = Point;
@@ -30,8 +30,8 @@ pub fn part_one(input: &str) -> Option<u32> {
     let (_, sensors) = parse_input(input).unwrap();
 
     for (sensor, beacon) in sensors.iter() {
-        let distance = sensor.manhattan_distance(&beacon) as i32;
-        beacon_y_count.entry(beacon.y).and_modify(|v| { v.insert(beacon.clone()); }).or_default();
+        let distance = sensor.manhattan_distance(beacon) as i32;
+        beacon_y_count.entry(beacon.y).and_modify(|v| { v.insert(*beacon); }).or_default();
         for delta_y in -distance..=distance {
             let current_y = sensor.y + delta_y;
             let half_x_range = distance - delta_y.abs();
@@ -47,7 +47,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     let row = grid.get(&interesting_row).unwrap();
     let beacons = beacon_y_count.get(&interesting_row).map(|v| v.len()).unwrap_or(0_usize);
     dbg!(&beacons);
-    let result = row.into_iter().fold(BTreeSet::new(), |mut acc, v| {
+    let result = row.iter().fold(BTreeSet::new(), |mut acc, v| {
         acc.extend(v.clone().into_iter());
         acc
     }).len() - beacons;
@@ -57,8 +57,44 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(result as u32)
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    // let max_range = 4_000_000;
+    let max_range = 20;
+    let mut grid: BTreeMap<i32, Vec<RangeInclusive<i32>>> = BTreeMap::new();
+    let (_, sensors) = parse_input(input).unwrap();
+
+    for (sensor, beacon) in sensors.iter() {
+        let distance = sensor.manhattan_distance(beacon) as i32;
+        for delta_y in -distance..=distance {
+            let current_y = sensor.y + delta_y;
+            if current_y < 0 || current_y > max_range {
+                continue;
+            }
+            let half_x_range = distance - delta_y.abs();
+            let range = 0.max(sensor.x - half_x_range)..=max_range.min(sensor.x + half_x_range);
+            grid.entry(current_y).and_modify(|v| {
+                v.push(range.clone());
+                v.sort_by(|a, b| a.start().cmp(b.start()));
+            }).or_insert_with(|| vec![range.clone()]);
+        }
+    }
+
+    let distress_beacon_location: Point = grid.into_iter().filter_map(|(y, v)| {
+        match v.iter().try_fold(0..=0, |acc, r| {
+            if r.start() <= &(*acc.end() + 1) {
+                ControlFlow::Continue(*acc.start()..=*r.end().max(acc.end()))
+            } else {
+                // println!("{:?} - {:?} - {:?}", &y, &acc, &r);
+                ControlFlow::Break((acc.end() + 1)..=(r.start() - 1))
+            }
+        }) {
+            ControlFlow::Continue(_) => None,
+            ControlFlow::Break(r) => Some((*r.start(), y))
+        }
+    }).map(|(x, y)| Point { x, y }).last().unwrap();
+
+    let result = 4_000_000 * distress_beacon_location.x as u64 + distress_beacon_location.y as u64;
+    Some(result)
 }
 
 fn main() {
@@ -80,6 +116,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 15);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(56000011));
     }
 }
