@@ -6,6 +6,7 @@
 use std::env;
 use std::fs;
 pub mod fs_parse;
+pub mod point;
 
 pub mod helpers;
 

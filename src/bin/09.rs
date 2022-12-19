@@ -1,3 +1,4 @@
+use advent_of_code::point::Point;
 use std::collections::HashSet;
 
 use itertools::Itertools;
@@ -24,28 +25,6 @@ enum Direction {
     Down,
     Left,
     Right,
-}
-
-#[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy)]
-struct Point {
-    x: i32,
-    y: i32,
-}
-
-impl Point {
-    fn x_distance(&self, point_b: &Point) -> u32 {
-        self.x.abs_diff(point_b.x)
-    }
-
-    fn y_distance(&self, point_b: &Point) -> u32 {
-        self.y.abs_diff(point_b.y)
-    }
-
-    fn distance(&self, point_b: &Point) -> f32 {
-        let x_distance = self.x_distance(point_b);
-        let y_distance = self.y_distance(point_b);
-        ((x_distance as f32).powi(2) + (y_distance as f32).powi(2)).sqrt()
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
