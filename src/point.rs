@@ -23,5 +23,3 @@ impl Point {
         ((x_distance as f32).powi(2) + (y_distance as f32).powi(2)).sqrt()
     }
 }
-
-

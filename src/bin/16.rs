@@ -1,15 +1,15 @@
-#![allow(unused_variables,dead_code)]
+#![allow(unused_variables, dead_code)]
 // Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
 
 use std::collections::BTreeMap;
 
 use nom::{
-    IResult,
     branch::alt,
-    multi::separated_list1,
+    bytes::complete::tag,
     character::complete::{alpha1, newline, u32 as nom_u32},
+    multi::separated_list1,
     sequence::preceded,
-    bytes::complete::tag, Parser,
+    IResult, Parser,
 };
 
 #[derive(Debug, Clone)]
@@ -24,14 +24,20 @@ fn parse_line(input: &str) -> IResult<&str, Valve> {
     let (input, flow_rate) = preceded(tag(" has flow rate="), nom_u32)(input)?;
     let (input, tunnels_to) = alt((
         preceded(tag("; tunnel leads to valve "), alpha1.map(|v| vec![v])),
-        preceded(tag("; tunnels lead to valves "), separated_list1(tag(", "), alpha1))
+        preceded(
+            tag("; tunnels lead to valves "),
+            separated_list1(tag(", "), alpha1),
+        ),
     ))(input)?;
 
-    Ok((input, Valve {
-        name,
-        flow_rate,
-        tunnels_to,
-    }))
+    Ok((
+        input,
+        Valve {
+            name,
+            flow_rate,
+            tunnels_to,
+        },
+    ))
 }
 
 fn parse_input(input: &str) -> IResult<&str, BTreeMap<&str, Valve>> {

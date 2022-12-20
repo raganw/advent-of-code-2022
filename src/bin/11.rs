@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::{collections::VecDeque, cell::RefCell};
+use std::{cell::RefCell, collections::VecDeque};
 
 use nom::{
     branch::alt,
@@ -67,11 +67,27 @@ fn operation(input: &str) -> IResult<&str, Operation> {
 
 fn monkey(input: &str) -> IResult<&str, Monkey> {
     let (input, _) = delimited(tag("Monkey "), nom::character::complete::u32, tag(":\n"))(input)?;
-    let (input, items) = delimited(tag("  Starting items: "), separated_list1(tag(", "), nom::character::complete::u64), newline)(input)?;
+    let (input, items) = delimited(
+        tag("  Starting items: "),
+        separated_list1(tag(", "), nom::character::complete::u64),
+        newline,
+    )(input)?;
     let (input, operation) = delimited(tag("  Operation: "), operation, newline)(input)?;
-    let (input, test) = delimited(tag("  Test: divisible by "), nom::character::complete::u64, newline)(input)?;
-    let (input, true_target) = delimited(tag("    If true: throw to monkey "), nom::character::complete::u32, newline)(input)?;
-    let (input, false_target) = delimited(tag("    If false: throw to monkey "), nom::character::complete::u32, newline)(input)?;
+    let (input, test) = delimited(
+        tag("  Test: divisible by "),
+        nom::character::complete::u64,
+        newline,
+    )(input)?;
+    let (input, true_target) = delimited(
+        tag("    If true: throw to monkey "),
+        nom::character::complete::u32,
+        newline,
+    )(input)?;
+    let (input, false_target) = delimited(
+        tag("    If false: throw to monkey "),
+        nom::character::complete::u32,
+        newline,
+    )(input)?;
 
     let items: RefCell<VecDeque<u64>> = RefCell::new(items.into_iter().collect());
 
@@ -105,7 +121,11 @@ fn lcm(a: u64, b: u64) -> u64 {
     (a * b) / gcd(a, b)
 }
 
-fn monkey_business<F: Fn(u64) -> u64>(mut monkeys: Vec<Monkey>, rounds: u32, scaling_operation: F) -> u64 {
+fn monkey_business<F: Fn(u64) -> u64>(
+    mut monkeys: Vec<Monkey>,
+    rounds: u32,
+    scaling_operation: F,
+) -> u64 {
     for _ in 0..rounds {
         for monkey_idx in 0..monkeys.len() {
             let mut target_monkey_and_items: Vec<(usize, u64)> = Vec::new();
@@ -132,7 +152,7 @@ fn monkey_business<F: Fn(u64) -> u64>(mut monkeys: Vec<Monkey>, rounds: u32, sca
     let mut result: Vec<u64> = monkeys.iter().map(|m| m.inspection_count).collect();
     result.sort();
     let (a, b) = result.iter().rev().take(2).collect_tuple().unwrap();
-     a * b
+    a * b
 }
 
 /// Part One
@@ -145,7 +165,9 @@ pub fn part_one(input: &str) -> Option<u64> {
 
 pub fn part_two(input: &str) -> Option<u64> {
     let (_, monkeys) = parse_input(input).unwrap();
-    let scaling_factor = monkeys.iter().fold(1, |acc, monkey| lcm(acc, monkey.test.0));
+    let scaling_factor = monkeys
+        .iter()
+        .fold(1, |acc, monkey| lcm(acc, monkey.test.0));
 
     let result = monkey_business(monkeys, 10_000, |val| val % scaling_factor);
     Some(result)

@@ -4,7 +4,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::newline,
-    multi::{separated_list1, separated_list0},
+    multi::{separated_list0, separated_list1},
     sequence::{delimited, separated_pair},
     IResult,
 };
@@ -21,9 +21,9 @@ impl PartialEq for PacketElement {
     }
 }
 
-impl Eq for PacketElement { }
+impl Eq for PacketElement {}
 
-impl PartialOrd for PacketElement { 
+impl PartialOrd for PacketElement {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -32,9 +32,15 @@ impl PartialOrd for PacketElement {
 impl Ord for PacketElement {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (PacketElement::Value(left_value), PacketElement::Value(right_value)) => left_value.cmp(right_value),
-            (PacketElement::Value(left_value), PacketElement::List(_)) => PacketElement::List(vec![PacketElement::Value(*left_value)]).cmp(other),
-            (PacketElement::List(_), PacketElement::Value(right_value)) => self.cmp(&PacketElement::List(vec![PacketElement::Value(*right_value)])),
+            (PacketElement::Value(left_value), PacketElement::Value(right_value)) => {
+                left_value.cmp(right_value)
+            }
+            (PacketElement::Value(left_value), PacketElement::List(_)) => {
+                PacketElement::List(vec![PacketElement::Value(*left_value)]).cmp(other)
+            }
+            (PacketElement::List(_), PacketElement::Value(right_value)) => self.cmp(
+                &PacketElement::List(vec![PacketElement::Value(*right_value)]),
+            ),
             (PacketElement::List(left_list), PacketElement::List(right_list)) => {
                 for (a, b) in left_list.iter().zip(right_list) {
                     match a.cmp(b) {
@@ -56,7 +62,11 @@ fn parse_value(input: &str) -> IResult<&str, PacketElement> {
 }
 
 fn parse_list(input: &str) -> IResult<&str, PacketElement> {
-    let (input, value) = delimited(tag("["), separated_list0(tag(","), parse_packet_element), tag("]"))(input)?;
+    let (input, value) = delimited(
+        tag("["),
+        separated_list0(tag(","), parse_packet_element),
+        tag("]"),
+    )(input)?;
 
     Ok((input, PacketElement::List(value)))
 }
@@ -70,7 +80,7 @@ fn parse_packet(input: &str) -> IResult<&str, (PacketElement, PacketElement)> {
 }
 
 fn parse_input(input: &str) -> IResult<&str, Vec<(PacketElement, PacketElement)>> {
-     separated_list1(tag("\n\n"), parse_packet)(input)
+    separated_list1(tag("\n\n"), parse_packet)(input)
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -95,13 +105,17 @@ pub fn part_two(input: &str) -> Option<u32> {
     packets.push(packet_1.clone());
     packets.push(packet_2.clone());
     packets.sort();
-    let result = packets.iter().enumerate().filter_map(|(i, p)| {
-        if *p == packet_1 || *p == packet_2 {
-            Some(i as u32 + 1)
-        } else {
-            None
-        }
-    }).product();
+    let result = packets
+        .iter()
+        .enumerate()
+        .filter_map(|(i, p)| {
+            if *p == packet_1 || *p == packet_2 {
+                Some(i as u32 + 1)
+            } else {
+                None
+            }
+        })
+        .product();
     Some(result)
 }
 

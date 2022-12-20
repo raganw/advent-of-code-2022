@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use advent_of_code::fs_parse::*;
@@ -11,7 +11,7 @@ struct Dir<'a> {
     dirs: RefCell<HashMap<&'a str, Rc<Dir<'a>>>>,
 }
 
-impl <'a> Dir<'a> {
+impl<'a> Dir<'a> {
     fn new(name: &'a str) -> Self {
         Self {
             name,
@@ -22,30 +22,36 @@ impl <'a> Dir<'a> {
 
     fn size(&self) -> u32 {
         let total_files = self.files.borrow().iter().map(|f| f.filesize).sum::<u32>();
-        let total_dirs = self.dirs.borrow().iter().map(|(_, d)| d.size()).sum::<u32>();
+        let total_dirs = self
+            .dirs
+            .borrow()
+            .iter()
+            .map(|(_, d)| d.size())
+            .sum::<u32>();
         total_files + total_dirs
     }
 
     fn sizes(&self) -> Vec<u32> {
-        let mut child_sizes: Vec<u32> = self.dirs.borrow().iter().flat_map(|(_, d)| d.sizes()).collect();
+        let mut child_sizes: Vec<u32> = self
+            .dirs
+            .borrow()
+            .iter()
+            .flat_map(|(_, d)| d.sizes())
+            .collect();
         child_sizes.push(self.size());
         child_sizes
     }
 }
-    
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct File<'a> {
     name: &'a str,
-    filesize: u32
+    filesize: u32,
 }
 
-impl <'a> File <'a> {
+impl<'a> File<'a> {
     fn new(name: &'a str, filesize: u32) -> Self {
-        Self {
-            name,
-            filesize
-        }
+        Self { name, filesize }
     }
 }
 
@@ -55,19 +61,17 @@ fn build_filesystem(operations: Vec<Operation>) -> Rc<Dir> {
 
     for op in operations {
         match op {
-            Operation::Cd(cd_op) => {
-                match cd_op {
-                    Cd::Root => {
-                        dir_stack.push(root.clone());
-                    },
-                    Cd::Down(dirname) => {
-                        let current_dir = dir_stack.last().unwrap();
-                        let new_cwd = current_dir.dirs.borrow().get(dirname).unwrap().clone();
-                        dir_stack.push(new_cwd);
-                    },
-                    Cd::Up => {
-                        dir_stack.pop();
-                    }
+            Operation::Cd(cd_op) => match cd_op {
+                Cd::Root => {
+                    dir_stack.push(root.clone());
+                }
+                Cd::Down(dirname) => {
+                    let current_dir = dir_stack.last().unwrap();
+                    let new_cwd = current_dir.dirs.borrow().get(dirname).unwrap().clone();
+                    dir_stack.push(new_cwd);
+                }
+                Cd::Up => {
+                    dir_stack.pop();
                 }
             },
             Operation::Ls(ls_entries) => {
@@ -75,10 +79,16 @@ fn build_filesystem(operations: Vec<Operation>) -> Rc<Dir> {
                 for entry in ls_entries.iter() {
                     match entry {
                         LsEntry::Dir(dirname) => {
-                            current_dir.dirs.borrow_mut().insert(dirname, Rc::new(Dir::new(dirname)));
+                            current_dir
+                                .dirs
+                                .borrow_mut()
+                                .insert(dirname, Rc::new(Dir::new(dirname)));
                         }
                         LsEntry::File { name, size } => {
-                            current_dir.files.borrow_mut().push(Rc::new(File::new(name, *size)));
+                            current_dir
+                                .files
+                                .borrow_mut()
+                                .push(Rc::new(File::new(name, *size)));
                         }
                     }
                 }
