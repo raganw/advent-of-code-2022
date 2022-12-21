@@ -1,5 +1,5 @@
-use std::collections::BTreeSet;
 use itertools::Itertools;
+use std::collections::BTreeSet;
 
 use nom::{
     bytes::complete::tag,
@@ -18,13 +18,21 @@ pub fn parse_point(input: &str) -> IResult<&str, Point> {
 pub fn parse_line(input: &str) -> IResult<&str, Vec<Point>> {
     let (input, points) = separated_list1(tag(" -> "), parse_point)(input)?;
 
-    let points: Vec<Point> = points.into_iter().tuple_windows().flat_map(|(a, b)| {
-        if a.0 == b.0 {
-            (a.1.min(b.1)..=a.1.max(b.1)).map(|y| (a.0, y)).collect::<Vec<Point>>()
-        } else {
-            (a.0.min(b.0)..=a.0.max(b.0)).map(|x| (x, a.1)).collect::<Vec<Point>>()
-        }
-    }).collect();
+    let points: Vec<Point> = points
+        .into_iter()
+        .tuple_windows()
+        .flat_map(|(a, b)| {
+            if a.0 == b.0 {
+                (a.1.min(b.1)..=a.1.max(b.1))
+                    .map(|y| (a.0, y))
+                    .collect::<Vec<Point>>()
+            } else {
+                (a.0.min(b.0)..=a.0.max(b.0))
+                    .map(|x| (x, a.1))
+                    .collect::<Vec<Point>>()
+            }
+        })
+        .collect();
 
     Ok((input, points))
 }

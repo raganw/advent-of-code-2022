@@ -3,12 +3,8 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::newline,
-    multi::separated_list1,
-    sequence::separated_pair,
-    IResult, Finish,
+    branch::alt, bytes::complete::tag, character::complete::newline, multi::separated_list1,
+    sequence::separated_pair, Finish, IResult,
 };
 
 #[derive(Debug)]
@@ -64,23 +60,15 @@ impl Knot {
         }
         // on the x axis
         match self.point.x.cmp(&knot_b.point.x) {
-            std::cmp::Ordering::Less => {
-                self.move_knot(Direction::Right)
-            },
-            std::cmp::Ordering::Greater => {
-                self.move_knot(Direction::Left)
-            },
-            std::cmp::Ordering::Equal => {},
+            std::cmp::Ordering::Less => self.move_knot(Direction::Right),
+            std::cmp::Ordering::Greater => self.move_knot(Direction::Left),
+            std::cmp::Ordering::Equal => {}
         }
         // on the y axis
         match self.point.y.cmp(&knot_b.point.y) {
-            std::cmp::Ordering::Less => {
-                self.move_knot(Direction::Up)
-            },
-            std::cmp::Ordering::Greater => {
-                self.move_knot(Direction::Down)
-            },
-            std::cmp::Ordering::Equal => {},
+            std::cmp::Ordering::Less => self.move_knot(Direction::Up),
+            std::cmp::Ordering::Greater => self.move_knot(Direction::Down),
+            std::cmp::Ordering::Equal => {}
         }
 
         self.visited.insert(self.point);
@@ -95,7 +83,10 @@ struct Rope {
 impl Rope {
     fn new(num_knots: u32) -> Self {
         Self {
-            knots: (0..num_knots).into_iter().map(|_| Knot::default()).collect_vec(),
+            knots: (0..num_knots)
+                .into_iter()
+                .map(|_| Knot::default())
+                .collect_vec(),
         }
     }
     fn make_move(&mut self, direction: Direction) {
@@ -116,15 +107,18 @@ impl Rope {
 }
 
 fn operation(input: &str) -> IResult<&str, Operation> {
-    let (input, (op, quantity)) =
-        separated_pair(alt((tag("L"), tag("R"), tag("U"), tag("D"))), tag(" "), nom::character::complete::u32)(input)?;
+    let (input, (op, quantity)) = separated_pair(
+        alt((tag("L"), tag("R"), tag("U"), tag("D"))),
+        tag(" "),
+        nom::character::complete::u32,
+    )(input)?;
 
     let operation = match op {
         "L" => Operation::Left(quantity),
         "R" => Operation::Right(quantity),
         "U" => Operation::Up(quantity),
         "D" => Operation::Down(quantity),
-        _ => unreachable!("invalid direction")
+        _ => unreachable!("invalid direction"),
     };
     Ok((input, operation))
 }
@@ -143,22 +137,22 @@ pub fn part_one(input: &str) -> Option<u32> {
                 for _ in 0..*i {
                     rope.make_move(Direction::Left);
                 }
-            },
+            }
             Operation::Right(i) => {
                 for _ in 0..*i {
                     rope.make_move(Direction::Right);
                 }
-            },
+            }
             Operation::Up(i) => {
                 for _ in 0..*i {
                     rope.make_move(Direction::Up);
                 }
-            },
+            }
             Operation::Down(i) => {
                 for _ in 0..*i {
                     rope.make_move(Direction::Down);
                 }
-            },
+            }
         }
     }
 
@@ -176,22 +170,22 @@ pub fn part_two(input: &str) -> Option<u32> {
                 for _ in 0..*i {
                     rope.make_move(Direction::Left);
                 }
-            },
+            }
             Operation::Right(i) => {
                 for _ in 0..*i {
                     rope.make_move(Direction::Right);
                 }
-            },
+            }
             Operation::Up(i) => {
                 for _ in 0..*i {
                     rope.make_move(Direction::Up);
                 }
-            },
+            }
             Operation::Down(i) => {
                 for _ in 0..*i {
                     rope.make_move(Direction::Down);
                 }
-            },
+            }
         }
     }
 

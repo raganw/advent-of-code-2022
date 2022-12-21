@@ -1,12 +1,8 @@
 use std::{fmt, fmt::Display};
 
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::newline,
-    multi::separated_list1,
-    sequence::preceded,
-    IResult, Finish,
+    branch::alt, bytes::complete::tag, character::complete::newline, multi::separated_list1,
+    sequence::preceded, Finish, IResult,
 };
 
 #[derive(Debug)]
@@ -56,7 +52,7 @@ impl Iterator for Computer {
                         self.operations_stack.pop();
                         self.operation_counter = 0;
                     }
-                },
+                }
                 Operation::AddX(value) => {
                     if self.operation_counter == 2 {
                         self.register += value;
@@ -70,8 +66,8 @@ impl Iterator for Computer {
 
         match self.return_type {
             ReturnType::MidCycle => Some(register),
-            ReturnType::EndOfCycle => Some(self.register)
-        } 
+            ReturnType::EndOfCycle => Some(self.register),
+        }
     }
 }
 
@@ -145,13 +141,16 @@ pub fn part_one(input: &str) -> Option<i32> {
     let (_, operations) = parse_input(input).finish().unwrap();
     let computer = Computer::new(operations);
     let interesting_cycles = vec![20, 60, 100, 140, 180, 220];
-    let output: i32 = computer.enumerate().filter_map(|(i, register)| {
-        if interesting_cycles.contains(&(i as i32)) {
-            Some(i as i32 * register)
-        } else {
-            None
-        }
-    }).sum();
+    let output: i32 = computer
+        .enumerate()
+        .filter_map(|(i, register)| {
+            if interesting_cycles.contains(&(i as i32)) {
+                Some(i as i32 * register)
+            } else {
+                None
+            }
+        })
+        .sum();
     // let samples = vec![output[20], output[60], output[100], output[140], output[180], output[220]];
     // let result: i32 = samples.iter().map(|(a, b)| *a as i32 * b).sum();
     Some(output)

@@ -21,9 +21,14 @@ pub fn part_one(input: &str) -> Option<u32> {
             l.chars()
                 .map(|c| {
                     let height = c.to_string().parse::<u8>().unwrap();
-                    Tree { height, ..Tree::default() }
-                }).collect()
-        }).collect();
+                    Tree {
+                        height,
+                        ..Tree::default()
+                    }
+                })
+                .collect()
+        })
+        .collect();
     dbg!(&grid);
 
     let grid_width = grid.get(0).unwrap().len();
@@ -38,7 +43,7 @@ pub fn part_one(input: &str) -> Option<u32> {
                 tallest = tree.height;
                 tree.visible = true;
             }
-       }
+        }
     }
     // right side
     for row in grid.iter_mut() {
@@ -48,7 +53,7 @@ pub fn part_one(input: &str) -> Option<u32> {
                 tallest = tree.height;
                 tree.visible = true;
             }
-       }
+        }
     }
 
     // top
@@ -60,7 +65,11 @@ pub fn part_one(input: &str) -> Option<u32> {
                     tallest = tree.height;
                     tree.visible = true;
                 }
-                if col_idx == 0 || col_idx == grid_width - 1 || row_idx == 0 || row_idx == grid_height - 1 {
+                if col_idx == 0
+                    || col_idx == grid_width - 1
+                    || row_idx == 0
+                    || row_idx == grid_height - 1
+                {
                     tree.visible = true;
                 }
             } else {
@@ -92,7 +101,7 @@ pub fn part_one(input: &str) -> Option<u32> {
             }
         }
     }
-    
+
     Some(result)
 }
 
@@ -103,18 +112,28 @@ pub fn part_two(input: &str) -> Option<u32> {
             l.chars()
                 .map(|c| {
                     let height = c.to_string().parse::<u8>().unwrap();
-                    Tree { height, ..Tree::default() }
-                }).collect()
-        }).collect();
+                    Tree {
+                        height,
+                        ..Tree::default()
+                    }
+                })
+                .collect()
+        })
+        .collect();
     let mut grid: Vec<Vec<Tree>> = input
         .lines()
         .map(|l| {
             l.chars()
                 .map(|c| {
                     let height = c.to_string().parse::<u8>().unwrap();
-                    Tree { height, ..Tree::default() }
-                }).collect()
-        }).collect();
+                    Tree {
+                        height,
+                        ..Tree::default()
+                    }
+                })
+                .collect()
+        })
+        .collect();
 
     for (row_idx, row) in grid.iter_mut().enumerate() {
         for (col_idx, mut tree) in row.iter_mut().enumerate() {

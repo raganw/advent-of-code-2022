@@ -28,18 +28,25 @@ struct Map {
 impl Map {
     fn new(input: &str) -> Self {
         let width = input.lines().last().map(|l| l.chars().count()).unwrap();
-        let tiles = input.lines().flat_map(|l| l.chars().collect::<Vec<char>>()).collect::<Vec<char>>();
+        let tiles = input
+            .lines()
+            .flat_map(|l| l.chars().collect::<Vec<char>>())
+            .collect::<Vec<char>>();
         let start = tiles.iter().position(|&c| c == 'S').unwrap();
         let end = tiles.iter().position(|&c| c == 'E').unwrap();
-        let tiles = tiles.iter().enumerate().map(|(i,&x)| {
-            if i == start {
-                Tile::new('a')
-            } else if i == end {
-                Tile::new('z')
-            } else {
-                Tile::new(x)
-            }
-        }).collect::<Vec<Tile>>();
+        let tiles = tiles
+            .iter()
+            .enumerate()
+            .map(|(i, &x)| {
+                if i == start {
+                    Tile::new('a')
+                } else if i == end {
+                    Tile::new('z')
+                } else {
+                    Tile::new(x)
+                }
+            })
+            .collect::<Vec<Tile>>();
 
         // dbg!(&start, &end);
 
@@ -149,22 +156,25 @@ pub fn part_one(input: &str) -> Option<u32> {
 
 pub fn part_two(input: &str) -> Option<u32> {
     let map = Map::new(input);
-    let starting_points = map.tiles.iter().enumerate().filter_map(|(i, t)| {
-        if t.height == 'a' {
-            Some(i)
-        } else {
-            None
-        }
-    }).collect::<Vec<usize>>();
-    let result = starting_points.iter().filter_map(|&start| {
-        let mut map = Map::new(input);
-        let path = map.find_path(start, map.end);
-        if path.is_empty() {
-            None
-        } else {
-            Some(path.len() as u32 - 1)
-        }
-    }).min().unwrap();
+    let starting_points = map
+        .tiles
+        .iter()
+        .enumerate()
+        .filter_map(|(i, t)| if t.height == 'a' { Some(i) } else { None })
+        .collect::<Vec<usize>>();
+    let result = starting_points
+        .iter()
+        .filter_map(|&start| {
+            let mut map = Map::new(input);
+            let path = map.find_path(start, map.end);
+            if path.is_empty() {
+                None
+            } else {
+                Some(path.len() as u32 - 1)
+            }
+        })
+        .min()
+        .unwrap();
     dbg!(result);
 
     Some(result)
