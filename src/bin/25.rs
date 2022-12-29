@@ -1,10 +1,9 @@
-use itertools::Itertools;
 use nom::{*, multi::many1, branch::alt, bytes::complete::tag};
 
 #[cfg(test)]
 use rstest_reuse;
 
-use std::{str::FromStr, iter::Sum, fmt::Display, fs::write};
+use std::{str::FromStr, iter::Sum, fmt::Display};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 struct Snafu(i64);
@@ -36,7 +35,7 @@ impl Display for Snafu {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let chars: Vec<_> = itertools::unfold(self.0, |val| {
             let mut rem = *val % 5;
-            *val = *val / 5;
+            *val /= 5;
             if *val == 0  && rem == 0 {
                 return None;
             }
@@ -84,7 +83,7 @@ pub fn part_one(input: &str) -> Option<String> {
     Some(sum.to_string())
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(_input: &str) -> Option<u32> {
     None
 }
 
